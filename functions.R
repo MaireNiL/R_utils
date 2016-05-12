@@ -1,3 +1,8 @@
+loadRdata <- function(RData, env = new.env()){
+  load(RData, env)
+  return(env) 
+}
+
 dendrogram <- function(){
   indels<-read.table("/Users/ml28/MT_2.0/dendrogram/indels_presence_table.txt",sep="",header=TRUE)
   last_column=(length(indels))
