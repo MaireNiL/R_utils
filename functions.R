@@ -4,15 +4,15 @@ loadRdata <- function(RData, env = new.env()){
 }
 
 dendrogram <- function(){
-  indels<-read.table("/Users/ml28/MT_2.0/dendrogram/indels_presence_table.txt",sep="",header=TRUE)
-  last_column=(length(indels))
-  presence_table=indels[,2:last_column]
+  indels <- read.table("/Users/ml28/MT_2.0/dendrogram/indels_presence_table.txt",sep="",header=TRUE)
+  last_column = (length(indels))
+  presence_table = indels[,2:last_column]
   d = dist(t(presence_table)) 
   hc = hclust(d)
   library(rafalib); mypar()
   hcd = as.dendrogram(hc)
   pdf(file='test.pdf',100, 15)
-  plot(hcd,cex.lab=0.5)
+  plot(hcd, cex.lab=0.5)
 dev.off()
 }
 
