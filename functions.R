@@ -114,3 +114,22 @@ ggplot(df, aes(V5, V6), fill=V6) +
 
 dev.off()
 }
+
+logRplot <-function() {
+for (group in chromList) {
+    chrom.idx = snvs.metadata$CHROM == group
+    sample_pairs <- cbind(samples, "xxxH-Dog") # where xxH-Dog is the host we want to normalize to
+    for (i in 1:nrow(sample_pairs)) {
+        par(mfrow=c(1,2)) 
+        # update this using layout
+        sample = cbind(snvs.nr[,sample_pairs[i,1]], snvs.nr[,sample_pairs[i,2]])
+        logR = apply(sample, 1, function(dat) {
+        nT = dat[1]
+        nH = dat[2]
+        log2(nT / nH)
+        })
+     plot(snvs.metadata$POS[chrom.idx], logR[chrom.idx],yaxt="n", pch=20, col="gray45", main=paste0("BAF and logR - ", sample_pairs[i,1]), cex=1.3, cex.main=2, cex.axis=2,xlab="Genomic coordinate", ylab="logR")
+      abline(h=median(na.omit(logR)))     
+    }
+    dev.off()
+}}
