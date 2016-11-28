@@ -133,3 +133,71 @@ for (group in chromList) {
     }
     dev.off()
 }}
+
+function <- bafplotOriginal() {
+# Code from AOB 18/08/2016
+# BAFPLOTS PER CHROMOSOME USING CURRENT DATA OBJECTS 
+# Load data
+# ......snvs.metadata, snvs.nr, snvs.nv, snvs.vaf
+
+# Create output directory
+outdir = paste0("~/Desktop/", Sys.Date(), "_BAFplots")
+dir.create(outdir, showWarnings=F)
+
+# A) ONE FILE PER SAMPLE, ONE PAGE PER CHROMOSOME
+##################################################
+
+for (i in 1:ncol(snvs.nr)) {
+    pdf(paste0(outdir, "/", samples[i], "_BAFplots_AllChrom.pdf"), width=40, height=10)
+    par(mar=c(5.1, 4.9, 5, 2.1))
+    
+    # Take all sample VAFs
+    vaf = snvs.vaf[,i]
+    
+    for (chrom in c(1:38, "X")) {
+        # Take variants in the chromosome
+        chrom.idx = snvs.metadata$CHROM == chrom
+        
+        # First, plot all variants
+        plot(1:sum(chrom.idx), vaf[chrom.idx], main=paste0(samples[i], ", chomosome ", chrom), xlab="SNV index", ylab="BAF", pch=20, 
+             col="gray72", cex=1.7, cex.main=1.6, cex.axis=1.4, cex.lab=1.4)
+        
+        # Second, plot tumour-only variants in black
+        chrom.tonly.idx = tumour.only.idx[chrom.idx]
+        points((1:sum(chrom.idx))[chrom.tonly.idx], vaf[chrom.idx][chrom.tonly.idx], pch=18, col="black", cex=2.2)
+        
+        # Add legend
+        legend(y=1.15, x=0, horiz=T,  legend=c("Tumour-only     ", "Host+tumour"), pch=c(18,20), col=c("black", "grey"), pt.cex=2, cex=1.6, bty="n", xpd=T)
+    }
+    dev.off()
+}
+
+# B) ONE FILE PER CHROMOSOME, ONE PAGE PER SAMPLE
+##################################################
+
+for (chrom in 1) { #c(1:38, "X")) {
+    pdf(paste0(outdir, "/Chrom", chrom, "_BAFplots_AllSamples.pdf"), width=40, height=10)
+    par(mar=c(5.1, 4.9, 5, 2.1))
+    
+    # Take variants in the chromosome
+    chrom.idx = snvs.metadata$CHROM == chrom
+    
+    for (i in 1:ncol(snvs.nr)) {
+        # Take all sample VAFs
+        vaf = snvs.vaf[,i]
+        
+        # First, plot all variants
+        plot(1:sum(chrom.idx), vaf[chrom.idx], main=paste0("Chromosome ", chrom, ", ", samples[i]), xlab="SNV index", ylab="BAF", pch=20, 
+             col="gray72", cex=1.7, cex.main=1.6, cex.axis=1.4, cex.lab=1.4)
+        
+        # Second, plot tumour-only variants in black
+        chrom.tonly.idx = tumour.only.idx[chrom.idx]
+        points((1:sum(chrom.idx))[chrom.tonly.idx], vaf[chrom.idx][chrom.tonly.idx], pch=18, col="black", cex=2.2)
+        
+        # Add legend
+        legend(y=1.15, x=0, horiz=T,  legend=c("Tumour-only     ", "Host+tumour"), pch=c(18,20), col=c("black", "grey"), pt.cex=2, cex=1.6, bty="n", xpd=T)
+    }
+    
+    dev.off()
+}}
+ 
