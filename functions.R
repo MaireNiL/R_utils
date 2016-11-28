@@ -201,3 +201,56 @@ for (chrom in 1) { #c(1:38, "X")) {
     dev.off()
 }}
  
+snpsOverlap <- function() {
+    load("SNVs.RData")
+  source("http://bioconductor.org/biocLite.R")
+  biocLite("BiocUpgrade")
+  biocLite("GenomicRanges")
+  biocLite("IRanges")
+  
+  library(IRanges)
+  library(GenomicRanges)
+# Sort out genotyped snps
+maps <- read.table(file="list_SNPs_noGerman_maf05_miss04_ALL.bed", header=FALSE)
+
+snpPanel <- as.data.frame(cbind("WGsnps", as.character(maps$V1), maps$V3, maps$V3))
+snpPanel[,5] <- NA
+snpPanel[,6] <- NA
+names(snpPanel) <-c("sample","chr","start","end","vaf","nr")
+snpPanel.num <- transform(snpPanel, start = as.numeric(as.character(start)))
+snpPanel.num.num <- transform(snpPanel.num, end = as.numeric(as.character(end)))
+for (i in samples) {
+  sample<-substr(i,1,4)
+  assign(paste0("snvs",sample), snvs.vaf[,i]>0)
+  }
+
+DogxxxT<-as.data.frame(cbind(samples[2],as.character(snvs.metadata[`snvsxxxT`,]$CHROM), snvs.metadata[`snvsxxxT`,]$POS, snvs.metadata[`snvsxxxT`,]$POS, snvs.vaf[`snvsxxxT`,2],snvs.nr[`snvsxxxT`,2],snvs.metadata[`snvsxxxT`,]$REF,snvs.metadata[`snvsxxxT`,]$ALT))
+names(DogxxxT) <-c("sample","chr","start","end","vaf","nr")
+DogxxxT.num <- transform(DogxxxT, start = as.numeric(as.character(start)))
+DogxxxT.num.num <- transform(DogxxxT.num, end = as.numeric(as.character(end)))
+data <-rbind(snpPanel.num.num, DogxxxT.num.num)
+
+gr1 = with(DogxxxT.num.num, GRanges(chr, IRanges(start=start, end=end), vaf=vaf, nr=nr))
+
+gr <- makeGRangesFromDataFrame(data, TRUE)
+d <- disjoin(gr)
+olaps <- findOverlaps(d, gr)
+mcols(d) <- splitAsList(gr$sample[subjectHits(olaps)], queryHits(olaps))
+out <- d[elementLengths(d$X) > 1]
+out.df <- as.data.frame(out)
+z<-c()
+for (i in 1:nrow(out.df)) {
+    if ('NAsnps' %in% out.df$X[[i]]) {
+        z <- append(z, i)
+    }
+}
+#gr2 = with(out[z,], GRanges(chr, IRanges(start=start, end=end)))
+
+# subsetByOverlaps allows us to retain metaData
+subsetByOverlaps(gr1,out[z])
+check <- as.data.frame(subsetByOverlaps(gr1,out[z]))
+check$vaf <- as.numeric(as.character(check$vaf))
+hist(as.numeric(as.vector(elementMetadata(hist)$vaf)),main="VAF histogram",xlab="VAF",col="gray69", border="black",breaks=seq(0,1,0.01))
+# how to extract metadata from S4 class
+#elementMetadata()
+}  
