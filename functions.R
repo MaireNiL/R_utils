@@ -61,3 +61,56 @@ strand.bias <- function(VCF_Input, variant_support_edge, min_reads, min_percenta
  VCF_Input <- VCF_Input[-fail,]
  return(VCF_Input)
 }
+
+colLab <- function(n) {
+  if (is.leaf(n)) {
+    a <- attributes(n)
+    labCol <- colours[which(labels == a$label)]
+    if (is.na(labCol))
+      labCol = 8
+    attr(n, "nodePar") <- list(a$nodePar, lab.col=labCol, col=labCol, pch=15)
+  }
+  n
+}
+  
+bafPlot <- function() {
+for (chrom in chromList) {
+    chrom.idx = snvs.metadata$CHROM == chrom
+    for (i in 1:ncol(snvs.nr)) {
+        png(paste0("Chrom", chrom, "_", samples[i], "_BAFplots_AllSamples_tonly_test.png"), width=6000,height=1500)
+        chrom.tonly.idx = tumour.only.idx[chrom.idx]
+        chrom.snponly.idx = snps.idx[chrom.idx]
+        chrom.tunique.idx = tumour.unique.idx[chrom.idx]
+        vaf=snvs.vaf[,i]
+        plot((snvs.metadata$POS)[chrom.idx][chrom.snponly.idx], vaf[chrom.idx][chrom.snponly.idx],main=paste0("Chromosome ", chrom, ", ", samples[i]), xlab="SNV index", ylab="BAF", pch=20, col="black", cex=1.7, cex.main=1.6, cex.axis=1.4, cex.lab=1.4)
+        points(snvs.metadata$POS[chrom.idx][chrom.tonly.idx], vaf[chrom.idx][chrom.tonly.idx], pch=20, col="red", cex=1.7)
+        points(snvs.metadata$POS[chrom.idx][chrom.tunique.idx], vaf[chrom.idx][chrom.tunique.idx], pch=20, col="chartreuse", cex=2.5)
+        par(xpd=TRUE)
+        legend(y=1.5, x=0, horiz=T,  legend=c("SNPS","Tumour-only", "Tumour-unique"), pch=c(20,20,20), col=c("black","red","green"), pt.cex=2, cex=1.6, bty="n", xpd=T)
+        dev.off()
+    }
+}
+ 
+dStat <- function(dstatsInput, pdfOutput) {
+library(plotly)
+df <- read.table(dstatsInput, header=FALSE)
+pdf(file=pdfOutput, 10, 100, useDingbats = FALSE)
+ggplot(df, aes(V5, V6)) +
+  stat_boxplot(geom ='errorbar') + 
+  geom_boxplot(position=position_dodge(width=0.8)) +
+  coord_flip() +
+  ggtitle("D-statistics D(Outgroup, Admix Test Pop, Pop X, Pop Y)") +
+  xlab("Pop X") + 
+  ylab("D") +
+  geom_hline(yintercept=0.0, colour="red", linetype="dashed", size=1 )
+
+# Note that plotly will automatically add horozontal lines to the whiskers
+# if we need to add colours use this
+ggplot(df, aes(V5, V6), fill=V6) +
+  geom_boxplot(position=position_dodge(width=0/8)) +
+  scale_color_gradientn(colours = rainbow(276)) +
+  coord_flip() +
+  geom_hline(yintercept=0.0, colour="red", linetype="dashed", size=1 )
+
+dev.off()
+}
